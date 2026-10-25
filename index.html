@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CeleX Services</title>
+<meta name="description" content="CeleX Services: event services for War of Clans. Rates, payment methods and contact.">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+  <feColorMatrix in="b" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"/></filter>
+</svg>
+
+<header class="nav-wrap">
+  <nav class="nav" aria-label="Main">
+    <div class="track">
+      <div class="goo" aria-hidden="true"><i class="b2"></i><i class="b1"></i></div>
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#services">Services</a>
+      <a href="#payments">Payments</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <section id="home" class="hero">
+    <h1>CeleX Services</h1>
+    <p class="lead">Event services for War of Clans</p>
+    <span class="cue" aria-hidden="true">Scroll</span>
+  </section>
+
+  <section id="about" class="sec rv">
+    <div class="win about">
+      <h2>About</h2>
+      <p>CeleX Services provides event services for War of Clans players and clans. Choose a service, check the rate for your league, then message us to book.</p>
+      <p class="mute">Rates differ by league, duration and discount tier. Every service window shows the full price list and a quick estimate.</p>
+    </div>
+  </section>
+
+  <section id="services" class="sec">
+    <h2 class="rv">Services</h2>
+    <p class="mute rv">Special event services</p>
+    <div class="grid" id="grid-events"></div>
+    <p class="mute rv gap">Other services</p>
+    <div class="grid" id="grid-other"></div>
+  </section>
+
+  <section id="payments" class="sec">
+    <h2 class="rv">Payment methods accepted</h2>
+    <div class="win rv">
+      <h3>E-Wallet</h3>
+      <div class="pay" id="pay-e"></div>
+      <h3>Crypto</h3>
+      <div class="pay" id="pay-c"></div>
+    </div>
+  </section>
+
+  <section id="contact" class="sec rv">
+    <div class="win">
+      <h2>Contact</h2>
+      <p class="mute">Message us to book or ask a question.</p>
+      <div class="btns" id="contact-links"></div>
+    </div>
+  </section>
+</main>
+
+<footer><span class="mute">CeleX Services</span></footer>
+
+<dialog id="win" aria-labelledby="win-title"></dialog>
+<script src="app.js"></script>
+</body>
+</html>
