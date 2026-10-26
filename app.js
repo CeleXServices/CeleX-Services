@@ -1,13 +1,26 @@
 (() => {
 /* SITE SETTING (change this one value):
-   true  = special prices are shown: the regular price is crossed out with the discounted price below it
+   true  = special prices are shown: the regular price is crossed out beside the discounted price
    false = only regular prices are shown */
 const SHOW_DISCOUNT = true;
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const LINE = 'https://line.me/ti/p/Cj_2SCkbNY', TG = 'https://t.me/C33trjiu';
+const ORDER_ENDPOINT = ''; // Set this to the deployed Apps Script web app URL.
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+  const devToolsShortcut = (e.ctrlKey || e.metaKey) && (
+    (e.shiftKey && ['i', 'j', 'c'].includes(key)) || key === 'u'
+  );
+  if (key === 'f12' || devToolsShortcut) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
 
 /* Rates. bol rows: [league, regRound, regHon, amtMinRounds, amtRound, amtHon, spRound, spHon]
    hourly rows: [league, regular, special]   band rows: [label, minH, maxH, regular, special?] */
@@ -36,19 +49,50 @@ const from = s => {
   const v = s.g.map(r => s.t === 'bol' ? (SHOW_DISCOUNT ? r[6] : r[3] ? Math.min(r[1], r[4]) : r[1]) : s.t === 'hr' ? (SHOW_DISCOUNT ? r[2] : r[1]) : (SHOW_DISCOUNT && r[4] ? r[4] : r[3]));
   return 'From ' + f(Math.min(...v)) + ' USD per ' + unit(s);
 };
+const cardPrice = s => {
+  if (s.t === 'bot') return null;
+  const candidates = s.g.map(r => {
+    if (s.t === 'bol') return {price: SHOW_DISCOUNT ? r[6] : r[1], regular: r[1]};
+    if (s.t === 'hr') return {price: SHOW_DISCOUNT ? r[2] : r[1], regular: r[1]};
+    const discounted = SHOW_DISCOUNT && r[4] && r[4] < r[3];
+    return {price: discounted ? r[4] : r[3], regular: discounted ? r[3] : r[3]};
+  });
+  const lowest = candidates.reduce((best, item) => item.price < best.price ? item : best);
+  return {...lowest, discounted: lowest.price < lowest.regular};
+};
 S.forEach((s, i) => {
   const b = document.createElement('button');
   b.className = 'card rv'; b.type = 'button';
-  b.innerHTML = `<b>${s.n}</b><span class="from">${from(s)}</span><span class="hint">View rates and contact</span>`;
+  const icon = s.id === 'bot'
+    ? '<span class="service-icon" aria-hidden="true"><img src="assets/icons/discord.svg" alt="" width="24" height="24"></span>'
+    : '';
+  const pricing = cardPrice(s);
+  if (pricing && pricing.discounted) b.classList.add('discounted');
+  const priceMarkup = pricing && pricing.discounted
+    ? `<span class="card-pricing discounted"><span class="card-price"><s>${f(pricing.regular)} USD</s><strong>${f(pricing.price)} USD</strong><small>per ${unit(s)}</small></span></span>`
+    : `<span class="card-pricing"><span class="from">${from(s)}</span></span>`;
+  const discountRibbon = pricing && pricing.discounted ? '<span class="discount-ribbon" aria-label="Discount">Discount</span>' : '';
+  b.innerHTML = `${discountRibbon}<span class="card-top">${icon}<b>${s.n}</b></span>${priceMarkup}<span class="hint">View rates and contact <span aria-hidden="true">→</span></span>`;
   b.onclick = () => openWin(s);
   $(i < 7 ? '#grid-events' : '#grid-other').append(b);
 });
-
 /* service window */
 const dlg = $('#win');
-const links = `<a href="${LINE}" target="_blank" rel="noopener">LINE</a><a href="${TG}" target="_blank" rel="noopener">Telegram</a>`;
+const links = `<a href="${LINE}" target="_blank" rel="noopener"><img src="assets/icons/line.svg" alt="" aria-hidden="true">LINE</a><a href="${TG}" target="_blank" rel="noopener"><img src="assets/icons/telegram.svg" alt="" aria-hidden="true">Telegram</a>`;
 $('#contact-links').innerHTML = links;
 let closing = false;
+let orderTimeout;
+window.addEventListener('message', e => {
+  const frame = $('iframe[name="order-response"]', dlg);
+  if (!frame || e.source !== frame.contentWindow || !e.data || e.data.type !== 'celex-order-result') return;
+  const form = $('#order-form', dlg);
+  if (!form) return;
+  window.clearTimeout(orderTimeout);
+  $('.order-submit', form).disabled = e.data.success !== true;
+  $('.order-status', form).textContent = e.data.success === true
+    ? 'Request received. We will contact you to confirm availability and the final price.'
+    : 'We could not submit your request. Please try again or contact us directly.';
+});
 const closeWin = () => {
   if (!dlg.open || closing) return;
   if (reduce) { dlg.close(); return; }
@@ -73,7 +117,7 @@ function openWin(s) {
   if (s.t === 'bol') table = `<tr><th>League</th><th>Per round</th><th>Per honorific</th><th>Amount discount</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D ? r[1] : 0, D ? r[6] : r[1], '')}</td><td>${cell(D ? r[2] : 0, D ? r[7] : r[2], '')}</td><td>${r[3] ? `<span class="tp"><span>${r[3]}+ rounds</span>${cell(r[1], r[4], '/ round')}${cell(r[2], r[5], '/ honorific')}</span>` : ''}</td></tr>`).join('');
   else if (s.t === 'hr') table = `<tr><th>League</th><th>Per hour</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D ? r[1] : 0, D ? r[2] : r[1], '')}</td></tr>`).join('');
   else table = `<tr><th>Duration</th><th>Per hour</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D && r[4] ? r[3] : 0, D && r[4] ? r[4] : r[3], '')}</td></tr>`).join('');
-  const contact = `<span class="lbl">Contact</span><div class="btns">${links}</div>`;
+  const contact = `<span class="lbl">Want to book?</span><button class="request-open" type="button">Request availability</button><span class="sub contact-direct">Or contact us directly</span><div class="btns">${links}</div>`;
   dlg.innerHTML = `<div class="top"><div><h2 id="win-title">${s.n}</h2><p class="sub">${s.d}</p></div><button class="x" type="button">Close</button></div>` + (s.t === 'bot'
     ? `<div class="cols"><div class="sum one"><span class="price">Custom pricing</span><p class="sub">Message us to discuss your clan and get a price.</p>${contact}</div></div>`
     : `<div class="cols">
@@ -84,6 +128,33 @@ function openWin(s) {
     <aside class="sum"><span class="lbl">Estimated total</span><span class="was" id="was"></span><span class="price" id="tot"></span><p class="sub" id="det"></p><p class="sub" id="note"></p>${contact}</aside>
   </div>
   <details class="all"><summary>View full price list</summary><div class="dd"><div class="tw"><table>${table}</table></div></div></details>`);
+
+  dlg.insertAdjacentHTML('beforeend', `
+    <form class="order-form" id="order-form" action="${ORDER_ENDPOINT}" method="post" target="order-response" hidden>
+      <h3>Request availability</h3>
+      <p class="sub">Send an order request. Your booking is not confirmed until we check availability and confirm the final price.</p>
+      <input type="hidden" name="service">
+      <input type="hidden" name="selection">
+      <input type="hidden" name="estimate">
+      <label class="order-field">Your name<input name="customerName" autocomplete="name" maxlength="100" required></label>
+      <div class="order-field"><label for="order-contact-method">Preferred contact method</label>
+        <select id="order-contact-method" name="contactMethod" required>
+          <option value="Telegram">Telegram</option><option value="LINE">LINE</option><option value="Email">Email</option>
+        </select>
+      </div>
+      <label class="order-field" for="order-contact">Contact detail<input id="order-contact" name="contact" maxlength="200" required></label>
+      <div class="order-schedule">
+        <label class="order-field">Preferred date<input name="preferredDate" type="date"></label>
+        <label class="order-field">Preferred time<input name="preferredTime" type="time"></label>
+      </div>
+      <label class="order-field">Timezone<input name="timezone" readonly></label>
+      <label class="order-field">Additional details<textarea name="notes" rows="3" maxlength="1000"></textarea></label>
+      <label class="order-field order-honeypot" aria-hidden="true">Leave this field empty<input name="website" tabindex="-1" autocomplete="off"></label>
+      <label class="order-consent"><input name="requestOnly" type="checkbox" required> I understand this is a request only, not a confirmed booking.</label>
+      <button class="order-submit" type="submit">Send request</button>
+      <p class="order-status sub" role="status" aria-live="polite"></p>
+      <iframe name="order-response" title="Order request response" hidden></iframe>
+    </form>`);
 
   const calc = () => {
     let wr, rr, note = '';
@@ -104,6 +175,62 @@ function openWin(s) {
   };
   paint();
   $('.x', dlg).onclick = closeWin;
+  const orderForm = $('#order-form', dlg);
+  const orderStatus = $('.order-status', orderForm);
+  const orderSubmit = $('.order-submit', orderForm);
+  const orderButton = $('.request-open', dlg);
+  const contactMethod = $('#order-contact-method', orderForm);
+  const contactInput = $('#order-contact', orderForm);
+  const updateContact = () => {
+    contactInput.type = contactMethod.value === 'Email' ? 'email' : 'text';
+    contactInput.autocomplete = contactMethod.value === 'Email' ? 'email' : 'off';
+    contactInput.placeholder = contactMethod.value === 'Telegram' ? '@username' : contactMethod.value === 'LINE' ? 'LINE ID or contact detail' : 'you@example.com';
+  };
+  contactMethod.onchange = updateContact;
+  updateContact();
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const timezoneInput = $('[name="timezone"]', orderForm);
+  const preferredDateInput = $('[name="preferredDate"]', orderForm);
+  const preferredTimeInput = $('[name="preferredTime"]', orderForm);
+  const updateTimezone = () => {
+    const selectedDate = preferredDateInput.value && new Date(`${preferredDateInput.value}T${preferredTimeInput.value || '12:00'}`);
+    const instant = selectedDate && !Number.isNaN(selectedDate.getTime()) ? selectedDate : new Date();
+    const zoneName = new Intl.DateTimeFormat('en-US', {timeZone, timeZoneName: 'longOffset'})
+      .formatToParts(instant).find(part => part.type === 'timeZoneName').value;
+    const offset = zoneName === 'GMT' ? 'UTC+0' : zoneName.replace(/^GMT/, 'UTC').replace(/:00$/, '').replace(/([+-])0(\d)/, '$1$2');
+    timezoneInput.value = `${timeZone} (${offset})`;
+  };
+  preferredDateInput.addEventListener('input', updateTimezone);
+  preferredTimeInput.addEventListener('input', updateTimezone);
+  updateTimezone();
+  orderButton.onclick = () => {
+    orderForm.hidden = false;
+    orderForm.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block: 'start'});
+    $('[name="customerName"]', orderForm).focus({preventScroll: true});
+  };
+  orderForm.onsubmit = e => {
+    if (!ORDER_ENDPOINT) {
+      e.preventDefault();
+      orderStatus.textContent = 'Online requests are not connected yet. Please contact us through LINE or Telegram for now.';
+      return;
+    }
+    const quote = s.t === 'bot' ? 'Custom pricing; confirm with seller' : `${f(calc().now)} USD estimated; final price to be confirmed`;
+    const selection = s.t === 'bot' ? 'Custom pricing' : [
+      s.t === 'bol' || s.t === 'hr' ? `League: ${s.g[st.l][0]}` : '',
+      `${qty}: ${st.q}`
+    ].filter(Boolean).join('; ');
+    $('[name="service"]', orderForm).value = s.n;
+    $('[name="selection"]', orderForm).value = selection;
+    $('[name="estimate"]', orderForm).value = quote;
+    orderStatus.textContent = 'Sending your request...';
+    orderSubmit.disabled = true;
+    window.clearTimeout(orderTimeout);
+    orderTimeout = window.setTimeout(() => {
+      if (!orderSubmit.disabled) return;
+      orderStatus.textContent = 'We could not confirm submission. Please contact us directly before sending another request.';
+      orderSubmit.disabled = false;
+    }, 30000);
+  };
   const seg = $('.seg', dlg);
   if (seg) seg.onclick = e => {
     const b = e.target.closest('button'); if (!b) return;
@@ -135,7 +262,8 @@ function openWin(s) {
 }
 
 /* payments */
-const pay = (n, f2) => `<div class="rv"><img src="assets/icons/${f2}.svg" alt="" width="40" height="40"><span>${n}</span></div>`;
+const RECOMMENDED = ['Revolut']; /* names of payment methods that get the Recommended label */
+const pay = (n, f2) => { const rec = RECOMMENDED.includes(n); return `<div class="rv${rec ? ' rec' : ''}">${rec ? '<em class="badge">Recommended</em>' : ''}<img src="assets/icons/${f2}.svg" alt="" width="40" height="40"><span>${n}</span></div>`; };
 $('#pay-e').innerHTML = pay('PayPal', 'paypal') + pay('Revolut', 'revolut');
 $('#pay-c').innerHTML = [['Bitcoin','btc'],['USDT','usdt'],['Solana','sol'],['Litecoin','ltc'],['Monero','xmr'],['Ethereum','eth'],['Tron','trx']].map(a => pay(...a)).join('');
 
