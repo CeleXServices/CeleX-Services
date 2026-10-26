@@ -1,7 +1,4 @@
 (() => {
-/* SITE SETTING (change this one value):
-   true  = special prices are shown: the regular price is crossed out beside the discounted price
-   false = only regular prices are shown */
 const SHOW_DISCOUNT = true;
 
 const $ = (s, r = document) => r.querySelector(s);
