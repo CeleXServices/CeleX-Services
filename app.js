@@ -1,5 +1,6 @@
 (() => {
-const SHOW_DISCOUNT = true;
+const SHOW_DISCOUNT = false;
+const ULTRA_DISCOUNT = false;
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -39,20 +40,23 @@ const S = [
 ];
 const f = n => (Math.round(n * 100) / 100).toString();
 const unit = s => s.t === 'bol' ? 'round' : 'hour';
+const ultraPrice = (regular, discounted) => ULTRA_DISCOUNT && SHOW_DISCOUNT && discounted < regular
+  ? Math.round(discounted * 0.85 * 100) / 100
+  : discounted;
 
 /* cards */
 const from = s => {
   if (s.t === 'bot') return 'Contact for pricing';
-  const v = s.g.map(r => s.t === 'bol' ? (SHOW_DISCOUNT ? r[6] : r[3] ? Math.min(r[1], r[4]) : r[1]) : s.t === 'hr' ? (SHOW_DISCOUNT ? r[2] : r[1]) : (SHOW_DISCOUNT && r[4] ? r[4] : r[3]));
+  const v = s.g.map(r => s.t === 'bol' ? (SHOW_DISCOUNT ? ultraPrice(r[1], r[6]) : r[3] ? Math.min(r[1], r[4]) : r[1]) : s.t === 'hr' ? (SHOW_DISCOUNT ? ultraPrice(r[1], r[2]) : r[1]) : (SHOW_DISCOUNT && r[4] ? ultraPrice(r[3], r[4]) : r[3]));
   return 'From ' + f(Math.min(...v)) + ' USD per ' + unit(s);
 };
 const cardPrice = s => {
   if (s.t === 'bot') return null;
   const candidates = s.g.map(r => {
-    if (s.t === 'bol') return {price: SHOW_DISCOUNT ? r[6] : r[1], regular: r[1]};
-    if (s.t === 'hr') return {price: SHOW_DISCOUNT ? r[2] : r[1], regular: r[1]};
+    if (s.t === 'bol') return {price: SHOW_DISCOUNT ? ultraPrice(r[1], r[6]) : r[1], regular: r[1]};
+    if (s.t === 'hr') return {price: SHOW_DISCOUNT ? ultraPrice(r[1], r[2]) : r[1], regular: r[1]};
     const discounted = SHOW_DISCOUNT && r[4] && r[4] < r[3];
-    return {price: discounted ? r[4] : r[3], regular: discounted ? r[3] : r[3]};
+    return {price: discounted ? ultraPrice(r[3], r[4]) : r[3], regular: r[3]};
   });
   const lowest = candidates.reduce((best, item) => item.price < best.price ? item : best);
   return {...lowest, discounted: lowest.price < lowest.regular};
@@ -111,9 +115,9 @@ function openWin(s) {
   const qty = s.t === 'bol' ? 'Rounds' : 'Hours', D = SHOW_DISCOUNT;
   const league = s.t === 'bol' || s.t === 'hr' ? `<div class="field"><span class="lbl">League</span><div class="seg">${s.g.map((r, i) => `<button type="button" aria-pressed="${i === 0}">${r[0]}</button>`).join('')}</div></div>` : '';
   let table = '';
-  if (s.t === 'bol') table = `<tr><th>League</th><th>Per round</th><th>Per honorific</th><th>Amount discount</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D ? r[1] : 0, D ? r[6] : r[1], '')}</td><td>${cell(D ? r[2] : 0, D ? r[7] : r[2], '')}</td><td>${r[3] ? `<span class="tp"><span>${r[3]}+ rounds</span>${cell(r[1], r[4], '/ round')}${cell(r[2], r[5], '/ honorific')}</span>` : ''}</td></tr>`).join('');
-  else if (s.t === 'hr') table = `<tr><th>League</th><th>Per hour</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D ? r[1] : 0, D ? r[2] : r[1], '')}</td></tr>`).join('');
-  else table = `<tr><th>Duration</th><th>Per hour</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D && r[4] ? r[3] : 0, D && r[4] ? r[4] : r[3], '')}</td></tr>`).join('');
+  if (s.t === 'bol') table = `<tr><th>League</th><th>Per round</th><th>Per honorific</th><th>Amount discount</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D ? r[1] : 0, D ? ultraPrice(r[1], r[6]) : r[1], '')}</td><td>${cell(D ? r[2] : 0, D ? ultraPrice(r[2], r[7]) : r[2], '')}</td><td>${r[3] ? `<span class="tp"><span>${r[3]}+ rounds</span>${cell(r[1], ultraPrice(r[1], r[4]), '/ round')}${cell(r[2], ultraPrice(r[2], r[5]), '/ honorific')}</span>` : ''}</td></tr>`).join('');
+  else if (s.t === 'hr') table = `<tr><th>League</th><th>Per hour</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D ? r[1] : 0, D ? ultraPrice(r[1], r[2]) : r[1], '')}</td></tr>`).join('');
+  else table = `<tr><th>Duration</th><th>Per hour</th></tr>` + s.g.map(r => `<tr><td>${r[0]}</td><td>${cell(D && r[4] ? r[3] : 0, D && r[4] ? ultraPrice(r[3], r[4]) : r[3], '')}</td></tr>`).join('');
   const contact = `<span class="lbl">Want to book?</span><button class="request-open" type="button">Request availability</button><span class="sub contact-direct">Or contact us directly</span><div class="btns">${links}</div>`;
   dlg.innerHTML = `<div class="top"><div><h2 id="win-title">${s.n}</h2><p class="sub">${s.d}</p></div><button class="x" type="button">Close</button></div>` + (s.t === 'bot'
     ? `<div class="cols"><div class="sum one"><span class="price">Custom pricing</span><p class="sub">Message us to discuss your clan and get a price.</p>${contact}</div></div>`
@@ -157,11 +161,11 @@ function openWin(s) {
     let wr, rr, note = '';
     if (s.t === 'bol') {
       const r = s.g[st.l], am = r[3] && st.q >= r[3];
-      wr = r[1]; rr = D ? r[6] : am ? r[4] : r[1];
-      const wh = r[2], hh = D ? r[7] : am ? r[5] : r[2];
+      wr = r[1]; rr = D ? ultraPrice(r[1], r[6]) : am ? r[4] : r[1];
+      const wh = r[2], hh = D ? ultraPrice(r[2], r[7]) : am ? r[5] : r[2];
       note = `Honorifics are not included. Each one is ${hh < wh ? cut(f(wh) + ' USD') + ' ' : ''}${f(hh)} USD.` + (!D && r[3] && !am ? ` Order ${r[3]}+ rounds for ${cut(f(r[1]) + ' USD')} ${f(r[4])} USD per round.` : '');
-    } else if (s.t === 'hr') { const r = s.g[st.l]; wr = r[1]; rr = D ? r[2] : r[1]; }
-    else { const r = s.g.find(x => st.q >= x[1] && st.q <= x[2]) || s.g[s.g.length - 1]; wr = r[3]; rr = D && r[4] ? r[4] : r[3]; }
+    } else if (s.t === 'hr') { const r = s.g[st.l]; wr = r[1]; rr = D ? ultraPrice(r[1], r[2]) : r[1]; }
+    else { const r = s.g.find(x => st.q >= x[1] && st.q <= x[2]) || s.g[s.g.length - 1]; wr = r[3]; rr = D && r[4] ? ultraPrice(r[3], r[4]) : r[3]; }
     const cr = rr < wr;
     return {was: cr ? st.q * wr : 0, now: st.q * rr, det: `${cr ? cut(f(wr) + ' USD') + ' ' : ''}${f(rr)} USD per ${unit(s)}`, note};
   };
