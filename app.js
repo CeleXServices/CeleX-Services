@@ -41,7 +41,7 @@ const S = [
 const f = n => (Math.round(n * 100) / 100).toString();
 const unit = s => s.t === 'bol' ? 'round' : 'hour';
 const ultraPrice = (regular, discounted) => ULTRA_DISCOUNT && SHOW_DISCOUNT && discounted < regular
-  ? Math.round(discounted * 0.85 * 100) / 100
+  ? Math.round(discounted * 0.60 * 100) / 100
   : discounted;
 
 /* cards */
