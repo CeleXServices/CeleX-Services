@@ -1,5 +1,5 @@
 (() => {
-const SHOW_DISCOUNT = false;
+const SHOW_DISCOUNT = true;
 const ULTRA_DISCOUNT = true;
 
 const $ = (s, r = document) => r.querySelector(s);
