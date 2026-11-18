@@ -5,7 +5,7 @@ const ULTRA_DISCOUNT = true;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const LINE = 'https://line.me/ti/p/Cj_2SCkbNY', TG = 'https://t.me/C33trjiu';
-const ORDER_ENDPOINT = ''; // Set this to the deployed Apps Script web app URL.
+const ORDER_ENDPOINT = '';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 document.addEventListener('contextmenu', e => e.preventDefault());
@@ -20,8 +20,6 @@ document.addEventListener('keydown', e => {
   }
 }, true);
 
-/* Rates. bol rows: [league, regRound, regHon, amtMinRounds, amtRound, amtHon, spRound, spHon]
-   hourly rows: [league, regular, special]   band rows: [label, minH, maxH, regular, special?] */
 const hourlyA = [['League of Adepts+',125,100],['League of Asgard',110,90],['League of Odin',100,80],['League of Masters and below',80,50]];
 const S = [
  {id:'bol',n:'BoL (Battle For The Light)',t:'bol',d:'Priced per round plus per honorific.',g:[
@@ -44,7 +42,6 @@ const ultraPrice = (regular, discounted) => ULTRA_DISCOUNT && SHOW_DISCOUNT && d
   ? Math.round(discounted * 0.60 * 100) / 100
   : discounted;
 
-/* cards */
 const from = s => {
   if (s.t === 'bot') return 'Contact for pricing';
   const v = s.g.map(r => s.t === 'bol' ? (SHOW_DISCOUNT ? ultraPrice(r[1], r[6]) : r[3] ? Math.min(r[1], r[4]) : r[1]) : s.t === 'hr' ? (SHOW_DISCOUNT ? ultraPrice(r[1], r[2]) : r[1]) : (SHOW_DISCOUNT && r[4] ? ultraPrice(r[3], r[4]) : r[3]));
@@ -77,7 +74,6 @@ S.forEach((s, i) => {
   b.onclick = () => openWin(s);
   $(i < 7 ? '#grid-events' : '#grid-other').append(b);
 });
-/* service window */
 const dlg = $('#win');
 const links = `<a href="${LINE}" target="_blank" rel="noopener"><img src="assets/icons/line.svg" alt="" aria-hidden="true">LINE</a><a href="${TG}" target="_blank" rel="noopener"><img src="assets/icons/telegram.svg" alt="" aria-hidden="true">Telegram</a>`;
 $('#contact-links').innerHTML = links;
@@ -245,7 +241,6 @@ function openWin(s) {
     inp.onchange = () => { set(inp.value); inp.value = st.q; };
     $('.step', dlg).onclick = e => { const b = e.target.closest('button'); if (!b) return; set(st.q + (b === e.currentTarget.lastElementChild ? 1 : -1)); inp.value = st.q; };
   }
-  /* smooth dropdown for the price list */
   const det = $('details.all', dlg);
   if (det) {
     const dd = $('.dd', det); let an;
@@ -262,13 +257,11 @@ function openWin(s) {
   dlg.classList.remove('closing'); dlg.showModal(); dlg.scrollTop = 0;
 }
 
-/* payments */
-const RECOMMENDED = ['Revolut']; /* names of payment methods that get the Recommended label */
+const RECOMMENDED = ['Revolut'];
 const pay = (n, f2) => { const rec = RECOMMENDED.includes(n); return `<div class="rv${rec ? ' rec' : ''}">${rec ? '<em class="badge">Recommended</em>' : ''}<img src="assets/icons/${f2}.svg" alt="" width="40" height="40"><span>${n}</span></div>`; };
 $('#pay-e').innerHTML = pay('PayPal', 'paypal') + pay('Revolut', 'revolut');
 $('#pay-c').innerHTML = [['Bitcoin','btc'],['USDT','usdt'],['Solana','sol'],['Litecoin','ltc'],['Monero','xmr'],['Ethereum','eth'],['Tron','trx']].map(a => pay(...a)).join('');
 
-/* scroll reveal: every box fades in on its own as it enters the viewport, staggered within a batch */
 const io = new IntersectionObserver(es => {
   es.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top || a.boundingClientRect.left - b.boundingClientRect.left).forEach((e, i) => {
     const el = e.target, d = Math.min(i, 5) * 90; io.unobserve(el);
@@ -279,7 +272,6 @@ const io = new IntersectionObserver(es => {
 }, {threshold: .2, rootMargin: '0px 0px -10% 0px'});
 $$('.rv').forEach(el => io.observe(el));
 
-/* nav with droplet indicator */
 const track = $('.track'), as = $$('.track a'), b1 = $('.b1'), b2 = $('.b2');
 let lock = 0, cur = null;
 const place = a => {
@@ -298,7 +290,6 @@ b1.style.transition = b2.style.transition = 'none';
 place(as[0]); requestAnimationFrame(() => requestAnimationFrame(() => { b1.style.transition = b2.style.transition = ''; }));
 addEventListener('resize', () => { const a = cur; cur = null; b1.style.transition = b2.style.transition = 'none'; place(a); requestAnimationFrame(() => { b1.style.transition = b2.style.transition = ''; }); });
 
-/* quiet background: slow drifting points with faint links */
 const cv = $('#bg'), cx = cv.getContext('2d'); let W, H, P = [];
 const size = () => {
   const d = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;

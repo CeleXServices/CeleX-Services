@@ -6,7 +6,6 @@ html{scroll-behavior:smooth;scroll-padding-top:90px;background:var(--bg)}
 body{background:var(--bg);color:var(--fg);line-height:1.6;font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none}
 input,textarea,select{-webkit-user-select:text;user-select:text}
 dialog,.pay{-webkit-user-select:none;user-select:none}
-/* dark scrollbars */
 *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.28) transparent}
 @supports not (scrollbar-color:auto){
 *::-webkit-scrollbar{width:8px;height:8px}
@@ -24,7 +23,6 @@ h3{font-size:1rem;font-weight:400;color:var(--mute);margin:1.4rem 0 .8rem}
 .mute{color:var(--mute)}
 .gap{margin-top:2rem}
 
-/* navigation */
 .nav-wrap{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:0;right:0;z-index:20;display:flex;justify-content:center;padding:0 12px;pointer-events:none}
 .nav{pointer-events:auto;max-width:100%;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.06);
 -webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);padding:5px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
@@ -37,7 +35,6 @@ h3{font-size:1rem;font-weight:400;color:var(--mute);margin:1.4rem 0 .8rem}
 .b1{transition:left .5s cubic-bezier(.3,1.3,.5,1),width .5s cubic-bezier(.3,1.3,.5,1)}
 .b2{transition:left 1s cubic-bezier(.2,.8,.2,1) .06s,width 1s cubic-bezier(.2,.8,.2,1) .06s}
 
-/* layout */
 .hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 1.25rem 4rem;position:relative}
 h1{font-size:clamp(2.6rem,11vw,7.5rem);font-weight:600;letter-spacing:-.05em}
 .lead{margin-top:1.2rem;color:var(--mute);font-size:clamp(1rem,2.4vw,1.25rem)}
@@ -49,11 +46,9 @@ h1{font-size:clamp(2.6rem,11vw,7.5rem);font-weight:600;letter-spacing:-.05em}
 .about{max-width:720px}
 .about p+p{margin-top:.8rem}
 
-/* scroll reveal */
 .js .rv{opacity:0;transform:translateY(28px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
 .js .rv.in{opacity:1;transform:none}
 
-/* services */
 .services-heading{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.5rem}
 .services-title{min-width:0}
 .eyebrow{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;color:var(--mute);font-size:.7rem;text-transform:uppercase;letter-spacing:.2em}
@@ -91,7 +86,6 @@ h1{font-size:clamp(2.6rem,11vw,7.5rem);font-weight:600;letter-spacing:-.05em}
 @media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.services-heading{align-items:flex-start}.grid{grid-template-columns:1fr}.card{min-height:138px}#grid-other .card{grid-column:span 1;grid-template-columns:minmax(0,1fr) auto}#grid-other .card .card-top{grid-column:1;grid-row:1}#grid-other .card .card-pricing{grid-column:1;grid-row:2}#grid-other .card .hint{grid-column:2;grid-row:1/3;white-space:normal}}
 
-/* service window */
 dialog{margin:auto;width:min(920px,94vw);max-height:90svh;overflow:auto;border:1px solid var(--line2);border-radius:var(--r);background:#000;color:var(--fg);padding:clamp(1.5rem,4vw,2.75rem);overscroll-behavior:contain}
 dialog[open]{animation:pop .35s cubic-bezier(.2,.8,.2,1)}
 dialog::backdrop{background:rgba(0,0,0,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -122,7 +116,6 @@ th{font-weight:400}td:first-child{color:var(--fg)}
 .btns a:hover,.btns a:focus-visible{border-color:var(--fg);background:rgba(255,255,255,.08)}
 .btns a img{width:18px;height:18px;object-fit:contain;display:block}
 
-/* purchase window */
 .cols{display:grid;grid-template-columns:1.2fr 1fr;gap:clamp(1.5rem,4vw,3rem);margin-top:2.25rem;align-items:start}
 .ctl{display:flex;flex-direction:column;gap:2rem}
 .seg{gap:8px}
@@ -166,7 +159,6 @@ details.all summary:hover{color:var(--fg)}
 @media (max-width:720px){.cols{grid-template-columns:1fr;margin-top:1.75rem}}
 @media (max-width:520px){.order-schedule{grid-template-columns:1fr}}
 
-/* crossed-out prices */
 .cut{position:relative;display:inline-block;text-decoration:none;background:linear-gradient(90deg,#9b9b9b,#5c5c5c);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .cut::after{content:"";position:absolute;left:-4%;right:-4%;top:52%;height:1px;background:linear-gradient(90deg,transparent,#b4b4b4 18%,#6a6a6a 82%,transparent);transform:rotate(-7deg)}
 .stk{display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1.35}
@@ -174,7 +166,6 @@ details.all summary:hover{color:var(--fg)}
 .was{display:block;min-height:1.6rem;font-size:1.1rem}
 td{vertical-align:top}
 
-/* payments */
 .pay{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
 .pay div{border:1px solid var(--line);border-radius:10px;height:116px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;font-size:.9rem;transition:transform .25s ease,border-color .25s ease,background-color .25s ease}
 .pay div:hover{transform:translateY(-3px);border-color:var(--line2);background:rgba(255,255,255,.04)}
